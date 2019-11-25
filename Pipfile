@@ -7,6 +7,8 @@ verify_ssl = true
 
 [packages]
 requests = "*"
+pprint = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.8"
