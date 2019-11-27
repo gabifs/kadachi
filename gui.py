@@ -37,6 +37,7 @@ class mainWindow:
     def search_window(self):
         self.searchW = tk.Toplevel()
         self.searchW.title("Search Item")
+        self.searchW.resizable(False, False)
 
         self.searchLabel = ttk.Label(self.searchW, text="Enter name of item to be searched\n(names are case sensitive)")
         self.searchLabel.configure(justify='center')
@@ -71,6 +72,7 @@ class mainWindow:
     def deleteWindow(self):
         self.deleteW = tk.Toplevel()
         self.deleteW.title("Delete Item")
+        self.deleteW.resizable(False, False)
 
         self.deleteLabel = ttk.Label(self.deleteW,text="Enter name of item to be deleted\n(names are case sensitive)")
         self.deleteLabel.configure(justify = 'center')
@@ -113,6 +115,13 @@ class mainWindow:
 
     def startadd(self):
         # db,armorlist,s_list,itemname,itemdef,itemrank,skillname,skillrank,slot
+
+        if self.nameEntryAdd.get() == '':
+            print("Item name can't be empty")
+            return
+        if self.defEntryAdd.get() == '':
+            print("Defense can't be empty")
+            return
 
 
         itemname = self.nameEntryAdd.get()
@@ -204,6 +213,7 @@ class mainWindow:
 
         self.itemwindow = tk.Toplevel()
         self.itemwindow.title("Item Data")
+        self.itemwindow.resizable(False, False)
 
         self.dataframe = ttk.Frame(self.itemwindow)
 
@@ -250,18 +260,8 @@ class mainWindow:
 
     def redraw_player(self):
 
-        # TODO MAKE CHEST AND BELOW DEAL WITH CUSTOM IMAGES
 
-        self.headName.set("None")
-        self.headimg = None
-        self.chestName.set("None")
-        self.chestimg = None
-        self.gloveName.set("None")
-        self.gloveimg = None
-        self.waistName.set("None")
-        self.waistimg = None
-        self.pantName.set("None")
-        self.pantimg = None
+
 
         ########
         # HEAD #
@@ -294,6 +294,8 @@ class mainWindow:
                 self.headICO.bind("<Button-1>", lambda event: self.displayitem('head'))
             self.headnamelabel.bind("<Button-1>", lambda event: self.displayitem('head'))
         else:
+            self.headName.set("None")
+            self.headimg = None
             self.frameHead['cursor'] = ''
             self.frameHead.unbind("<Button-1>")
             self.headnamelabel.unbind("<Button-1>")
@@ -320,7 +322,7 @@ class mainWindow:
                     else:
                         self.imgname = self.imgname[11:]
                         url = self.imgurl + self.imgname
-                    self.download_image(url, self.img_path)
+                    self.download_image(url, self.img_path,self.player1.chest.custom)
                     self.chestimg = Image.open(self.chestimg).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
                     self.chestimg = ImageTk.PhotoImage(self.chestimg)
 
@@ -330,6 +332,8 @@ class mainWindow:
 
             self.chestnamelabel.bind("<Button-1>", lambda event: self.displayitem('chest'))
         else:
+            self.chestName.set("None")
+            self.chestimg = None
             self.frameChest['cursor'] = ''
             self.frameChest.unbind("<Button-1>")
             self.chestnamelabel.unbind("<Button-1>")
@@ -365,6 +369,8 @@ class mainWindow:
                 self.gloveICO.bind("<Button-1>", lambda event: self.displayitem('gloves'))
             self.glovenamelabel.bind("<Button-1>", lambda event: self.displayitem('gloves'))
         else:
+            self.gloveName.set("None")
+            self.gloveimg = None
             self.frameGlove['cursor'] = ''
             self.frameGlove.unbind("<Button-1>")
             self.glovenamelabel.unbind("<Button-1>")
@@ -391,7 +397,7 @@ class mainWindow:
                     else:
                         self.imgname = self.imgname[11:]
                         url = self.imgurl + self.imgname
-                    self.download_image(url, self.img_path,self.player1.gloves.custom)
+                    self.download_image(url, self.img_path,self.player1.waist.custom)
                     self.waistimg = Image.open(self.waistimg).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
                     self.waistimg = ImageTk.PhotoImage(self.waistimg)
 
@@ -400,6 +406,8 @@ class mainWindow:
                 self.waistICO.bind("<Button-1>", lambda event: self.displayitem('waist'))
             self.waistnamelabel.bind("<Button-1>", lambda event: self.displayitem('waist'))
         else:
+            self.waistName.set("None")
+            self.waistimg = None
             self.frameWaist['cursor'] = ''
             self.frameWaist.unbind("<Button-1>")
             self.waistnamelabel.unbind("<Button-1>")
@@ -426,7 +434,7 @@ class mainWindow:
                     else:
                         self.imgname = self.imgname[11:]
                         url = self.imgurl + self.imgname
-                    self.download_image(url, self.img_path,self.player1.gloves.custom)
+                    self.download_image(url, self.img_path,self.player1.legs.custom)
                     self.pantimg = Image.open(self.pantimg).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
                     self.pantimg = ImageTk.PhotoImage(self.pantimg)
 
@@ -435,8 +443,10 @@ class mainWindow:
                 self.pantICO.bind("<Button-1>", lambda event: self.displayitem('legs'))
             self.pantnamelabel.bind("<Button-1>", lambda event: self.displayitem('legs'))
         else:
-            self.frameWaist['cursor'] = ''
-            self.frameWaist.unbind("<Button-1>")
+            self.pantName.set("None")
+            self.pantimg = None
+            self.framePant['cursor'] = ''
+            self.framePant.unbind("<Button-1>")
             self.pantnamelabel.unbind("<Button-1>")
 
         self.getstats()
