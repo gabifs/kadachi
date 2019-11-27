@@ -759,7 +759,7 @@ class mainWindow:
         self.selskill = tk.StringVar()
         self.skillEntry = ttk.Combobox(self.controls, state="readonly", textvariable=self.selskill, values=skilllist)
         self.skillEntry.grid(column=0, row=5, sticky=tk.N)
-        self.skillEntry.current(14)
+        self.skillEntry.current(0)
 
         self.autocheck = ttk.Checkbutton(self.controls, text="Autocomplete Set", variable=self.autoc, onvalue=True, offvalue=False)
         self.autocheck.grid(column=0, row=6, sticky=tk.N)
