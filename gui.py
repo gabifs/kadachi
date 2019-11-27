@@ -29,6 +29,7 @@ class mainWindow:
     def search_window(self):
         self.searchW = tk.Toplevel()
         self.searchW.title("Search Item")
+        self.searchW.iconbitmap('main.ico')
 
         self.searchLabel = ttk.Label(self.searchW, text="Enter name of item to be searched\n(names are case sensitive)")
         self.searchLabel.configure(justify='center')
@@ -63,6 +64,7 @@ class mainWindow:
     def deleteWindow(self):
         self.deleteW = tk.Toplevel()
         self.deleteW.title("Delete Item")
+        self.deleteW.iconbitmap('main.ico')
 
         self.deleteLabel = ttk.Label(self.deleteW,text="Enter name of item to be deleted\n(names are case sensitive)")
         self.deleteLabel.configure(justify = 'center')
@@ -196,6 +198,7 @@ class mainWindow:
 
         self.itemwindow = tk.Toplevel()
         self.itemwindow.title("Item Data")
+        self.itemwindow.iconbitmap('main.ico')
 
         self.dataframe = ttk.Frame(self.itemwindow)
 
@@ -456,6 +459,7 @@ class mainWindow:
         self.addwin = tk.Frame(self.add)
 
         self.add.title("Add Item")
+        self.add.iconbitmap('main.ico')
 
         self.ranklist = ['Master', 'High', 'Low']
         self.slotlist = ['Head', 'Gloves', 'Chest', 'Waist', 'Legs']
@@ -545,6 +549,7 @@ class mainWindow:
     def warning_database(self):
 
         self.warningW = tk.Toplevel()
+        self.warningW.iconbitmap('main.ico')
         self.warningW.title("WARNING")
         self.warningW.resizable(False, False)
         self.warningW.focus_set()
