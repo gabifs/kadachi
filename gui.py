@@ -21,18 +21,35 @@ from io import BytesIO
 from objects import *
 import threading
 import time
+import random
 import os
 
-
-# import mhw_objects
-
-
-def testprint():
-    print("clicked a button")
-
-
-# noinspection PyCallByClass
 class mainWindow:
+
+    def search_window(self):
+        self.searchW = tk.Toplevel()
+        self.searchW.title("Search Item")
+
+        self.searchLabel = ttk.Label(self.searchW, text="Enter name of item to be searched\n(names are case sensitive)")
+        self.searchLabel.configure(justify='center')
+        self.searchLabel.grid(column=0, row=0, sticky=tk.N)
+
+        self.searchEntry = tk.Entry(self.searchW)
+        self.searchEntry.grid(column=0, row=1)
+
+        self.SearchYesB = ttk.Button(self.searchW, text="Confirm", command=lambda: self.displayitem('search'))
+        self.SearchYesB.grid(column=0, row=2, sticky=tk.E)
+
+        self.cancelSrc = ttk.Button(self.searchW, text="Cancel", command=lambda: self.searchW.destroy())
+        self.cancelSrc.grid(column=0, row=2, sticky=tk.W)
+
+        for child in self.searchW.winfo_children(): child.grid_configure(padx=5, pady=5)
+
+        windowWidth = self.searchW.winfo_reqwidth()
+        windowHeight = self.searchW.winfo_reqheight()
+        positionRight = int(self.searchW.winfo_screenwidth() / 3 - windowWidth / 3)
+        positionDown = int(self.searchW.winfo_screenheight() / 3 - windowHeight / 3)
+        self.searchW.geometry("+{}+{}".format(positionRight, positionDown))
 
     def start_delete(self):
         string = str(self.deleteEntry.get())
@@ -44,8 +61,6 @@ class mainWindow:
         self.deleteW.destroy()
 
     def deleteWindow(self):
-        # TODO DELETE WINDOW
-
         self.deleteW = tk.Toplevel()
         self.deleteW.title("Delete Item")
 
@@ -80,6 +95,9 @@ class mainWindow:
         self.s_list = pickle.load(s_file)
         self.a_list = pickle.load(a_file)
         self.db = pickle.load(db_file)
+
+        self.player1 = player()
+        self.redraw_player()
 
         s_file.close()
         a_file.close()
@@ -147,7 +165,7 @@ class mainWindow:
         self.rankEntry['state'] = 'readonly'
         self.skillEntry['state'] = 'readonly'
         self.autocheck['state'] = 'normal'
-        self.searchB['state'] = 'normal'
+        self.findB['state'] = 'normal'
         self.updateB['state'] = 'normal'
 
         self.itemwindow.destroy()
@@ -155,13 +173,6 @@ class mainWindow:
 
     def displayitem(self,slot):
 
-        self.addB['state'] = 'disabled'
-        self.removeB['state'] = 'disabled'
-        self.rankEntry['state'] = 'disabled'
-        self.skillEntry['state'] = 'disabled'
-        self.autocheck['state'] = 'disabled'
-        self.searchB['state'] = 'disabled'
-        self.updateB['state'] = 'disabled'
 
         if slot == 'head':
             self.item = self.player1.head
@@ -173,12 +184,18 @@ class mainWindow:
             self.item = self.player1.waist
         elif slot == 'legs':
             self.item = self.player1.legs
+        elif slot == 'search':
+            itemname = str(self.searchEntry.get())
+            self.searchW.destroy()
+            self.item = self.a_list.search_name(itemname)
+            if self.item is False:
+                print("Item not found")
+                return
+            else:
+                self.item = self.item.data
 
         self.itemwindow = tk.Toplevel()
         self.itemwindow.title("Item Data")
-        #self.itemwindow.attributes('-disabled', True)
-        self.itemwindow.overrideredirect(True)
-        #self.itemwindow.protocol("WM_DELETE_WINDOW", self.nothing())
 
         self.dataframe = ttk.Frame(self.itemwindow)
 
@@ -191,24 +208,6 @@ class mainWindow:
 
         self.dataframe.grid(column=1, row=0, sticky=tk.W)
 
-        self.icoframe = ttk.Frame(self.itemwindow)
-
-        img = self.item.image
-        if img is not None:
-            try:
-                img = Image.open(img).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
-                img = ImageTk.PhotoImage(img)
-            except:
-                imgname = img
-                imgname = imgname[11:]
-                url = self.imgurl + imgname
-                self.download_image(url, self.img_path)
-                img = Image.open(img).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
-                img = ImageTk.PhotoImage(img)
-
-            self.itemICO = ttk.Label(self.icoframe, image=img)
-            self.itemICO.grid(column=0, row=0)
-
         stat = "Item Name: {}\nDefense: {}\nResistances:\n\n   Fire: {}\n   Water: {}\n   Ice: {}\n   Thunder: {}\n   Dragon: {}\n\nSkills:\n".format(
             self.item.name, self.item.defense, self.item.fire_res, self.item.water_res,
             self.item.ice_res, self.item.thunder_res,
@@ -216,14 +215,12 @@ class mainWindow:
         if self.item.skills:
             for i in range(0, len(self.item.skills)):
                 temp_skl = self.item.skills[i]
-                # print(temp_skl.name)
                 temp_str = ''.join(
                     "\nName: {}\nDescription: {}\nLevel: {}\nEffects: {}\nModifiers: {}\n".format(temp_skl.name,
                                                                                                   temp_skl.description,
                                                                                                   temp_skl.level,
                                                                                                   temp_skl.effects,
                                                                                                   temp_skl.modifiers))
-                # print(temp_str)
                 stat = stat + temp_str
 
         self.text.config(state=tk.NORMAL)
@@ -231,7 +228,7 @@ class mainWindow:
         self.text.insert(tk.END, stat)
         self.text.config(state=tk.DISABLED)
 
-        self.quitB = ttk.Button(self.itemwindow,text="Exit",command = lambda: self.reenable_buttons())
+        self.quitB = ttk.Button(self.itemwindow,text="Exit",command = lambda: self.itemwindow.destroy())
         self.quitB.grid(column=1,row=1,sticky=tk.E)
 
         for child in self.itemwindow.winfo_children(): child.grid_propagate(0)
@@ -258,12 +255,16 @@ class mainWindow:
         self.pantName.set("None")
         self.pantimg = None
 
+        ########
+        # HEAD #
+        ########
+
         if self.player1.head is not None:
             self.frameHead['cursor'] = 'hand2'
             self.headName.set(self.player1.head.name)
             self.headimg = self.player1.head.image
             self.frameHead.bind("<Button-1>", lambda event: self.displayitem('head'))
-            if self.headimg is not None:
+            if self.player1.head.image is not None:
                 try:
                     self.headimg = Image.open(self.headimg).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
                     self.headimg = ImageTk.PhotoImage(self.headimg)
@@ -283,9 +284,15 @@ class mainWindow:
                 self.headICO = ttk.Label(self.frameHead, image=self.headimg)
                 self.headICO.grid(column=1, row=1)
                 self.headICO.bind("<Button-1>", lambda event: self.displayitem('head'))
+            self.headnamelabel.bind("<Button-1>", lambda event: self.displayitem('head'))
         else:
             self.frameHead['cursor'] = ''
             self.frameHead.unbind("<Button-1>")
+            self.headnamelabel.unbind("<Button-1>")
+
+        ########
+        # CHEST #
+        ########
 
         if self.player1.chest is not None:
             self.frameChest['cursor'] = 'hand2'
@@ -298,8 +305,13 @@ class mainWindow:
                     self.chestimg = ImageTk.PhotoImage(self.chestimg)
                 except:
                     self.imgname = self.chestimg
-                    self.imgname = self.imgname[11:]
-                    url = self.imgurl + self.imgname
+                    if self.player1.chest.custom is True:
+                        self.imgname = self.imgname[11:]
+                        self.imgname = self.imgname.replace(".", "/", 2)
+                        url = self.customurl + self.imgname
+                    else:
+                        self.imgname = self.imgname[11:]
+                        url = self.imgurl + self.imgname
                     self.download_image(url, self.img_path)
                     self.chestimg = Image.open(self.chestimg).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
                     self.chestimg = ImageTk.PhotoImage(self.chestimg)
@@ -307,9 +319,16 @@ class mainWindow:
                 self.chestICO = ttk.Label(self.frameChest, image=self.chestimg)
                 self.chestICO.grid(column=1, row=1)
                 self.chestICO.bind("<Button-1>", lambda event: self.displayitem('chest'))
+
+            self.chestnamelabel.bind("<Button-1>", lambda event: self.displayitem('chest'))
         else:
             self.frameChest['cursor'] = ''
             self.frameChest.unbind("<Button-1>")
+            self.chestnamelabel.unbind("<Button-1>")
+
+        ########
+        # GLOVES #
+        ########
 
         if self.player1.gloves is not None:
             self.frameGlove['cursor'] = 'hand2'
@@ -322,18 +341,29 @@ class mainWindow:
                     self.gloveimg = ImageTk.PhotoImage(self.gloveimg)
                 except:
                     self.imgname = self.gloveimg
-                    self.imgname = self.imgname[11:]
-                    url = self.imgurl + self.imgname
-                    self.download_image(url, self.img_path)
+                    if self.player1.gloves.custom is True:
+                        self.imgname = self.imgname[11:]
+                        self.imgname = self.imgname.replace(".", "/", 2)
+                        url = self.customurl + self.imgname
+                    else:
+                        self.imgname = self.imgname[11:]
+                        url = self.imgurl + self.imgname
+                    self.download_image(url, self.img_path,self.player1.gloves.custom)
                     self.gloveimg = Image.open(self.gloveimg).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
                     self.gloveimg = ImageTk.PhotoImage(self.gloveimg)
 
                 self.gloveICO = ttk.Label(self.frameGlove, image=self.gloveimg)
                 self.gloveICO.grid(column=1, row=1)
-                self.gloveICO.bind("<Button-1>", lambda event: self.displayitem('glove'))
+                self.gloveICO.bind("<Button-1>", lambda event: self.displayitem('gloves'))
+            self.glovenamelabel.bind("<Button-1>", lambda event: self.displayitem('gloves'))
         else:
             self.frameGlove['cursor'] = ''
             self.frameGlove.unbind("<Button-1>")
+            self.glovenamelabel.unbind("<Button-1>")
+
+        ########
+        # WAIST #
+        ########
 
         if self.player1.waist is not None:
             self.frameWaist['cursor'] = 'hand2'
@@ -346,22 +376,29 @@ class mainWindow:
                     self.waistimg = ImageTk.PhotoImage(self.waistimg)
                 except:
                     self.imgname = self.waistimg
-                    self.imgname = self.imgname[11:]
-                    url = self.imgurl + self.imgname
-                    self.download_image(url, self.img_path)
+                    if self.player1.waist.custom is True:
+                        self.imgname = self.imgname[11:]
+                        self.imgname = self.imgname.replace(".", "/", 2)
+                        url = self.customurl + self.imgname
+                    else:
+                        self.imgname = self.imgname[11:]
+                        url = self.imgurl + self.imgname
+                    self.download_image(url, self.img_path,self.player1.gloves.custom)
                     self.waistimg = Image.open(self.waistimg).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
                     self.waistimg = ImageTk.PhotoImage(self.waistimg)
 
                 self.waistICO = ttk.Label(self.frameWaist, image=self.waistimg)
                 self.waistICO.grid(column=1, row=1)
                 self.waistICO.bind("<Button-1>", lambda event: self.displayitem('waist'))
+            self.waistnamelabel.bind("<Button-1>", lambda event: self.displayitem('waist'))
         else:
             self.frameWaist['cursor'] = ''
             self.frameWaist.unbind("<Button-1>")
+            self.waistnamelabel.unbind("<Button-1>")
 
-        self.waistnamelabel = ttk.Label(self.frameWaist, textvariable=self.waistName)
-        self.waistnamelabel.grid(column=2, row=1, sticky=tk.N + tk.S)
-        self.waistnamelabel.bind("<Button-1>", lambda event: self.displayitem('waist'))
+        ########
+        # LEGS #
+        ########
 
         if self.player1.legs is not None:
             self.framePant['cursor'] = 'hand2'
@@ -374,21 +411,25 @@ class mainWindow:
                     self.pantimg = ImageTk.PhotoImage(self.pantimg)
                 except:
                     self.imgname = self.pantimg
-                    self.imgname = self.imgname[11:]
-                    url = self.imgurl + self.imgname
-                    self.download_image(url, self.img_path)
+                    if self.player1.legs.custom is True:
+                        self.imgname = self.imgname[11:]
+                        self.imgname = self.imgname.replace(".", "/", 2)
+                        url = self.customurl + self.imgname
+                    else:
+                        self.imgname = self.imgname[11:]
+                        url = self.imgurl + self.imgname
+                    self.download_image(url, self.img_path,self.player1.gloves.custom)
                     self.pantimg = Image.open(self.pantimg).resize((self.IMGSIZE, self.IMGSIZE), Image.ANTIALIAS)
                     self.pantimg = ImageTk.PhotoImage(self.pantimg)
 
                 self.pantICO = ttk.Label(self.framePant, image=self.pantimg)
                 self.pantICO.grid(column=1, row=1)
-                self.pantICO.bind("<Button-1>", lambda event: self.displayitem('pant'))
+                self.pantICO.bind("<Button-1>", lambda event: self.displayitem('legs'))
+            self.pantnamelabel.bind("<Button-1>", lambda event: self.displayitem('legs'))
         else:
             self.frameWaist['cursor'] = ''
             self.frameWaist.unbind("<Button-1>")
-
-        #print(type(self.player1.defense))
-        #print(self.player1.defense)
+            self.pantnamelabel.unbind("<Button-1>")
 
         self.getstats()
 
@@ -396,51 +437,19 @@ class mainWindow:
 
         self.warningW.destroy()
 
-        #self.rebuilding_window()
-
-        self.addB['state'] = 'disabled'
-        self.removeB['state'] = 'disabled'
-        self.rankEntry['state'] = 'disabled'
-        self.skillEntry['state'] = 'disabled'
-        self.autocheck['state'] = 'disabled'
-        self.searchB['state'] = 'disabled'
-        self.updateB['state'] = 'disabled'
-
         rebuild_database()
 
         print("Reloading database from file")
 
-        s_file = open('assets/skill_list.bin', 'rb')
-        a_file = open('assets/armor_list.bin', 'rb')
-        db_file = open('assets/database.bin', 'rb')
-
         self.reloadfiles()
 
         print("DONE")
-
-        #self.rebuildingW.destroy()
-
-        self.addB['state'] = 'normal'
-        self.removeB['state'] = 'normal'
-        self.rankEntry['state'] = 'readonly'
-        self.skillEntry['state'] = 'readonly'
-        self.autocheck['state'] = 'normal'
-        self.searchB['state'] = 'normal'
-        self.updateB['state'] = 'normal'
 
         self.player1 = player()
         self.redraw_player()
 
 
     def goto_add(self):
-        # self.master.withdraw()
-        '''self.master.update_idletasks()
-        add = addItemPg(self,self.db,self.a_list,self.s_list)'''
-
-        #tk.Toplevel(self, first, *args, **kwargs)
-        # root.withdraw()
-        #self.focus_set()
-        #self.first = first
 
         self.add = tk.Toplevel()
 
@@ -451,7 +460,6 @@ class mainWindow:
         self.ranklist = ['Master', 'High', 'Low']
         self.slotlist = ['Head', 'Gloves', 'Chest', 'Waist', 'Legs']
         self.skilllist = getskillnames(self.s_list)
-        # sranklist = ['0']
 
         '''for i in range(0, len(skill)):
             skilllist.append(format(skill[i].get("name")))'''
@@ -520,8 +528,7 @@ class mainWindow:
 
     def download_image(self, url, image_file_path,iscustom):
         filename = url
-        print(url)
-        if iscustom is True:
+        if iscustom:
             filename = filename[39:]
             filename = filename.replace("/",".",2)
             filename = '/' + filename
@@ -571,9 +578,7 @@ class mainWindow:
             self.player1.dragon_res)
         for i in range(0,len(self.player1.skills)):
             temp_skl = self.player1.skills[i]
-            #print(temp_skl.name)
             temp_str = ''.join("\nName: {}\nDescription: {}\nLevel: {}\nEffects: {}\nModifiers: {}\n".format(temp_skl.name, temp_skl.description, temp_skl.level, temp_skl.effects, temp_skl.modifiers))
-            #print(temp_str)
             stat_total = stat_total + temp_str
 
         self.stats.config(state=tk.NORMAL)
@@ -582,15 +587,6 @@ class mainWindow:
         self.stats.config(state=tk.DISABLED)
 
     def go(self):
-
-        '''self.addB['state'] = 'disabled'
-        self.removeB['state'] = 'disabled'
-        self.rankEntry['state'] = 'disabled'
-        self.skillEntry['state'] = 'disabled'
-        self.autocheck['state'] = 'disabled'
-        self.searchB['state'] = 'disabled'
-        self.updateB['state'] = 'disabled'''
-
         rank = self.selrank.get().lower()
         skill = self.selskill.get()
         autoc = self.autoc.get()
@@ -604,14 +600,6 @@ class mainWindow:
         self.player1.buildplayer(aset, self.s_list)
 
         self.redraw_player()
-
-        self.addB['state'] = 'normal'
-        self.removeB['state'] = 'normal'
-        self.rankEntry['state'] = 'readonly'
-        self.skillEntry['state'] = 'readonly'
-        self.autocheck['state'] = 'normal'
-        self.searchB['state'] = 'normal'
-        self.updateB['state'] = 'normal'
 
         return
 
@@ -656,23 +644,18 @@ class mainWindow:
 
         self.frameHead = ttk.Frame(self.display, height=self.FRAMEH, width=self.FRAMEW, borderwidth=2, relief='sunken')
         self.frameHead.grid(column=0, row=0, sticky=tk.W)
-        #self.frameHead.bind("<Button-1>", lambda event: testprint())
 
         self.frameChest = ttk.Frame(self.display, height=self.FRAMEH, width=self.FRAMEW, borderwidth=2, relief='sunken')
         self.frameChest.grid(column=0, row=1, sticky=tk.W)
-        self.frameChest.bind("<Button-1>", lambda event: self.displayitem('chest'))
 
         self.frameGlove = ttk.Frame(self.display, height=self.FRAMEH, width=self.FRAMEW, borderwidth=2, relief='sunken')
         self.frameGlove.grid(column=0, row=2, sticky=tk.W)
-        self.frameGlove.bind("<Button-1>", lambda event: self.displayitem('glove'))
 
         self.frameWaist = ttk.Frame(self.display, height=self.FRAMEH, width=self.FRAMEW, borderwidth=2, relief='sunken')
         self.frameWaist.grid(column=0, row=3, sticky=tk.W)
-        self.frameWaist.bind("<Button-1>", lambda event: self.displayitem('waist'))
 
         self.framePant = ttk.Frame(self.display, height=self.FRAMEH, width=self.FRAMEW, borderwidth=2, relief='sunken')
         self.framePant.grid(column=0, row=4, sticky=tk.W)
-        self.framePant.bind("<Button-1>", lambda event: self.displayitem('legs'))
 
         ''' HEAD '''
 
@@ -681,7 +664,7 @@ class mainWindow:
 
         self.headnamelabel = ttk.Label(self.frameHead, textvariable=self.headName)
         self.headnamelabel.grid(column=2, row=1, sticky=tk.N + tk.S)
-        #self.headnamelabel.bind("<Button-1>", lambda event: self.displayitem('head'))
+
 
         ''' CHEST '''
 
@@ -690,7 +673,6 @@ class mainWindow:
 
         self.chestnamelabel = ttk.Label(self.frameChest, textvariable=self.chestName)
         self.chestnamelabel.grid(column=2, row=1, sticky=tk.N + tk.S)
-        #self.chestnamelabel.bind("<Button-1>", lambda event: self.changeitem('chest'))
 
         ''' GLOVE '''
 
@@ -699,7 +681,6 @@ class mainWindow:
 
         self.glovenamelabel = ttk.Label(self.frameGlove, textvariable=self.gloveName)
         self.glovenamelabel.grid(column=2, row=1, sticky=tk.N + tk.S)
-        #self.glovenamelabel.bind("<Button-1>", lambda event: self.changeitem('glove'))
 
         ''' WAIST '''
 
@@ -708,7 +689,6 @@ class mainWindow:
 
         self.waistnamelabel = ttk.Label(self.frameWaist, textvariable=self.waistName)
         self.waistnamelabel.grid(column=2, row=1, sticky=tk.N + tk.S)
-        #self.waistnamelabel.bind("<Button-1>", lambda event: self.changeitem('waist'))
 
         ''' PANT '''
 
@@ -717,7 +697,6 @@ class mainWindow:
 
         self.pantnamelabel = ttk.Label(self.framePant, textvariable=self.pantName)
         self.pantnamelabel.grid(column=2, row=1, sticky=tk.N + tk.S)
-        #self.pantnamelabel.bind("<Button-1>", lambda event: self.changeitem('pant'))
 
         for child in self.display.winfo_children(): child.grid_propagate(0)
         for child in self.display.winfo_children(): child.grid_configure(padx=5, pady=5)
@@ -742,11 +721,13 @@ class mainWindow:
         '''BEGIN CONTROLS'''
 
         ranklist = ['Master', 'High', 'Low']
-        deflist = ['Physical', 'Fire', 'Water', 'Ice', 'Thunder', 'Dragon']
 
         skilllist = getskillnames(self.s_list)
 
         self.topbuttons = ttk.Frame(self.controls)
+        self.searchFrame = ttk.Frame(self.controls)
+        self.searchB = ttk.Button(self.searchFrame, text = "Search for Item", command=lambda: self.search_window())
+        self.searchB.pack()
 
         self.addB = ttk.Button(self.topbuttons, text="Add New Item", command=lambda: self.goto_add())
         self.addB.grid(column=0, row=0, sticky=tk.W)
@@ -754,35 +735,35 @@ class mainWindow:
         self.removeB = ttk.Button(self.topbuttons, text = "Delete Item", command=lambda: self.deleteWindow())
         self.removeB.grid(column=1,row=0,sticky=tk.E)
 
-        self.topbuttons.grid(column=0,row=0)
+        self.topbuttons.grid(column=0, row=1,sticky=tk.N)
 
         self.rankLabel = tk.Label(self.controls, text="Rank Filter:")
-        self.rankLabel.grid(column=0, row=1, sticky=tk.N)
+        self.rankLabel.grid(column=0, row=2, sticky=tk.N)
 
         self.selrank = tk.StringVar()
         self.rankEntry = ttk.Combobox(self.controls, state="readonly", textvariable=self.selrank, values=ranklist)
-        self.rankEntry.grid(column=0, row=2, sticky=tk.N)
+        self.rankEntry.grid(column=0, row=3, sticky=tk.N)
         self.rankEntry.current(0)
 
         self.skillLabel = tk.Label(self.controls, text="Skill to Prioritize:")
-        self.skillLabel.grid(column=0, row=3, sticky=tk.N)
+        self.skillLabel.grid(column=0, row=4, sticky=tk.N)
 
         self.selskill = tk.StringVar()
         self.skillEntry = ttk.Combobox(self.controls, state="readonly", textvariable=self.selskill, values=skilllist)
-        self.skillEntry.grid(column=0, row=4, sticky=tk.N)
+        self.skillEntry.grid(column=0, row=5, sticky=tk.N)
         self.skillEntry.current(14)
 
         self.autocheck = ttk.Checkbutton(self.controls, text="Autocomplete Set", variable=self.autoc, onvalue=True, offvalue=False)
-        self.autocheck.grid(column=0, row=7, sticky=tk.N)
+        self.autocheck.grid(column=0, row=6, sticky=tk.N)
 
-        self.searchB = ttk.Button(self.controls, text="Find Set", command=lambda: self.go())
-        self.searchB.grid(column=0, row=8, sticky=tk.N)
+        self.findB = ttk.Button(self.controls, text="Find Set", command=lambda: self.go())
+        self.findB.grid(column=0, row=7, sticky=tk.N)
 
         self.updateB = ttk.Button(self.controls, text="Rebuild Database", command=lambda: self.warning_database())
-        self.updateB.grid(column=0, row=9, sticky=tk.N)
+        self.updateB.grid(column=0, row=8, sticky=tk.N)
 
+        self.searchFrame.grid(column=0,row=0,sticky=tk.N)
 
-        #for child in self.controls.winfo_children(): child.grid_propagate(0)
         for child in self.controls.winfo_children(): child.grid_configure(padx=5, pady=5)
 
         self.controls.grid(column=1, row=0, sticky=tk.W)
