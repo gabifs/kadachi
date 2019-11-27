@@ -41,7 +41,6 @@ def main():
 
         root = tk.Tk()
         app = mainWindow(root,db,skill_list,armor_list)
-        root.iconbitmap('main.ico')
         root.mainloop()
 
 if __name__ == '__main__':
