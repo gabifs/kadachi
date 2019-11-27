@@ -17,5 +17,10 @@ Calculadora de build para o jogo **Monster Hunter World** produzida em python.
 * Para instalAção de novos pacotes no ambiente virtual execute o comando `pipenv install NOME_DO_PACOTE`
 * Para execução do projeto execute o comando `pipenv run python app.py`;
 
+### Instruções de compilação
+* Para compilar o software para windows, utilize PyInstaller (https://pyinstaller.readthedocs.io/en/stable/);
+* Utilize o seguinte comando para compilar: pyinstaller.exe --onefile --windowed --icon=main.ico --name TheKadachi  main.py
+* Será gerado um unico executável na pasta /dist/
+
 
 ***Para maiores informações sobre o desenvolvimento deste projeto, acesse a nossa [wiki](https://github.com/gabifs/kadachi/wiki).***
