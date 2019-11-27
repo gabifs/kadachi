@@ -140,7 +140,7 @@ class player:
                         for j in range(0,len(self.skills)):
                             if self.skills[j].skill_id == element.skills[i].skill_id:
                                 combined_lvl = self.skills[j].level + element.skills[i].level
-                                if len(skill_list.search(self.skills[j].skill_id).ranks) >= combined_lvl-1:
+                                if len(skill_list.search(self.skills[j].skill_id).ranks) > combined_lvl-1:
                                     temp = skill_list.search(self.skills[j].skill_id).ranks[combined_lvl-1]
                                     self.skills[j] = temp.rankdata
                                 added = True
@@ -638,7 +638,7 @@ def additem(db,armorlist,s_list,itemname,itemdef,itemrank,skillname,skillrank,sl
     item = dict({'name': itemname, 'defense': itemdef, 'skill': skillname, 'level': skillrank+1, 'slot': slot, 'rank': itemrank})
     temp = armor_obj()  # cria um objeto armadura vazio
     temp.insert_manually(item, s_list,armorlist)  # insere os dados lidos no objeto armadura
-    armorlist.insert_armor(temp)  # insere o objeto na lista de armaduras
+    armorlist.insert_sorted(temp)  # insere o objeto na lista de armaduras
 
     if temp.rank == 'master':  # essa parte faz a verificação de onde na estrutura a armadura pertence
         dest = db.master
@@ -660,7 +660,7 @@ def additem(db,armorlist,s_list,itemname,itemdef,itemrank,skillname,skillrank,sl
         dest = dest.legs
 
     if skillname is not 'None':  # verifica se essa lista é vazia (alguns itens não tem skills)
-            dest.search_name(skillname).ranks[skillrank].armorlist.insert_armor(temp)  # insere o rank da
+            dest.search_name(skillname).ranks[skillrank].armorlist.insert_sorted(temp)  # insere o rank da
             # skill na lista da armadura
 
     s_file = open('assets/skill_list.bin', 'wb')
@@ -682,6 +682,7 @@ def removeitem(itemname,db, armorlist,s_list):
 
     temp = armorlist.search_name(itemname)
     if temp is not False:
+
         temp = temp.data
 
         if temp.rank == 'master':  # essa parte faz a verificação de onde na estrutura a armadura pertence
