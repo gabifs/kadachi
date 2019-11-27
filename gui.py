@@ -632,7 +632,7 @@ class mainWindow:
         # self.master=tk.Tk()
         master.resizable(False, False)
 
-        master.title("MHW Build Calculator")
+        master.title("The Kadachi - A Python MHW Build Calculator")
 
         self.top = ttk.Frame(self.master)
         self.bot = ttk.Frame(self.master)
